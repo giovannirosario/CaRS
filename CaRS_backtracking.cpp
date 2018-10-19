@@ -179,7 +179,7 @@ int alg(int matriz[a_sz][a_sz][a_sz], int s, vector<int> &caminho, vector<int> &
 
 int main() {
 
-	vector <string> instancias = {"AfricaSul11n.car"};
+	vector <string> instancias = {"Egito9n.car"};
 
 
 	ofstream result_file;
