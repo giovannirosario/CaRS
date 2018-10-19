@@ -1,42 +1,30 @@
 #include <bits/stdc++.h>
 #include <stdlib.h>
+#include <string> 
+#include <chrono>
 
 using namespace std;
 
-#define ORDEM 8
-#define CARS 4	
-#define ORIGEM 0
+#define a_sz 20
+int ORDEM;
+int CARS;
+int ORIGEM = 0;
+
 #define RANDSEED 40
-#define CUSTO_TRECHO_MAX 50
-#define CUSTO_DEVOLUCAO_MAX 10
+//#define CUSTO_TRECHO_MAX 50
+//#define CUSTO_DEVOLUCAO_MAX 10
 
 struct custoXcarro {
 	int custo;
 	vector <int> carro;
 };
 
-
-void preencher_matriz(int matriz[CARS][ORDEM][ORDEM], int matriz_custo_devolucao[CARS][ORDEM]) {
-	srand(RANDSEED);
-	
-	for (int i = 0; i < CARS; i++) {
-		for (int j = 0; j < ORDEM; j++) {
-			matriz_custo_devolucao[i][j] = rand() % CUSTO_DEVOLUCAO_MAX;
-			
-			for (int k = 0; k < ORDEM; k++) {
-				matriz[i][j][k] = rand() % CUSTO_TRECHO_MAX;
-			}
-		}
-	}
-}
-
-
 /* FUNÇÃO BACKTRACKING RECURSIVA
 *  Vai testar o cenário de continuar com o mesmo carro e os cenários de trocar para qualquer um 
 *  dos outros carros disponíveis.
 */
 
-custoXcarro calcular_custo_sub_caminho(int matriz[CARS][ORDEM][ORDEM], int s, vector <int> sub_caminho, int carro_atual, bool carros_disponiveis[]) {	
+custoXcarro calcular_custo_sub_caminho(int matriz[a_sz][a_sz][a_sz], int s, vector <int> sub_caminho, int carro_atual, bool carros_disponiveis[]) {	
 	//SE CHEGOU NO ULTIMO VERTICE
 	if (s == sub_caminho.size()-1) {
 		custoXcarro aux;
@@ -88,7 +76,7 @@ custoXcarro calcular_custo_sub_caminho(int matriz[CARS][ORDEM][ORDEM], int s, ve
 */
 
 
-custoXcarro calcular_custo_caminho (int matriz[CARS][ORDEM][ORDEM], vector <int> caminho,int matriz_custo_devolucao[CARS][ORDEM]) {
+custoXcarro calcular_custo_caminho (int matriz[a_sz][a_sz][a_sz], vector <int> caminho,int matriz_custo_devolucao[a_sz][a_sz][a_sz]) {
 		// Outra permutação, outra possível solução, é necessário resetar o custo.
 		int custo_atual = 0;
 		//começa no primeiro carro
@@ -124,10 +112,14 @@ custoXcarro calcular_custo_caminho (int matriz[CARS][ORDEM][ORDEM], vector <int>
 			int pivot = 0;
 			for (int j = 0; j < aux.carro.size(); j++) {
 				if (aux.carro[j] != aux.carro[pivot]) {
-					custo_final_devolucoes += matriz_custo_devolucao[aux.carro[pivot]][caminho[pivot]];
+					custo_final_devolucoes += matriz_custo_devolucao[aux.carro[pivot]][caminho[pivot]][caminho[j]];
 					pivot = j;
 				}
 			}
+
+			/* ultima devolucao de carro */
+				custo_final_devolucoes += matriz_custo_devolucao[aux.carro[pivot]][caminho[pivot]][ORIGEM];
+
 			
 			aux.custo += custo_final_devolucoes;
 			
@@ -141,7 +133,7 @@ custoXcarro calcular_custo_caminho (int matriz[CARS][ORDEM][ORDEM], vector <int>
 
 
 // (n-1)! ?
-int alg(int matriz[CARS][ORDEM][ORDEM], int s, vector<int> &caminho, vector<int> &carros_usados, int matriz_custo_devolucao[CARS][ORDEM]) {
+int alg(int matriz[a_sz][a_sz][a_sz], int s, vector<int> &caminho, vector<int> &carros_usados, int matriz_custo_devolucao[a_sz][a_sz][a_sz]) {
 	
 	// A origem e o destino são sempre os mesmos, então fixei.
 	vector<int> vertice;
@@ -183,42 +175,120 @@ int alg(int matriz[CARS][ORDEM][ORDEM], int s, vector<int> &caminho, vector<int>
 	caminho.push_back(ORIGEM);
 	return menor_custo;
 }
-
+ 
 
 int main() {
-	
-	// Grafo
-	
-	int matriz[CARS][ORDEM][ORDEM];
-	
-	/*MATRIZ DE CUSTO DE DEVOLUCAO: CUSTO PARA DEVOLVER CARRO x para CIDADE y   [x][y]*/			
-	int matriz_custo_devolucao[CARS][ORDEM];
-						
-	preencher_matriz(matriz,matriz_custo_devolucao);
-	
-	// Vértice inicial.	
-	int s = ORIGEM;
-	
-	
-	std::vector<int> caminho;
-	std::vector<int> carros_usados;
-	
-	std::cout << "Custo do menor caminho: " << alg(matriz, s, caminho, carros_usados, matriz_custo_devolucao) << endl;
-	std::cout << "Caminho de menor custo: ";
-	for (unsigned i = 0; i < caminho.size(); i++){
-		std::cout << caminho[i]+1;
-		if(i+1 != caminho.size())
-			std::cout << " -> ";
+
+	vector <string> instancias = {"AfricaSul11n.car"};
+
+
+	ofstream result_file;
+	result_file.open("result",std::ios_base::app);
+
+    /* Instancias */ 
+	for (int k = 0; k < 1; ++k) {
+		// Grafo
+		
+		int matriz[a_sz][a_sz][a_sz];
+		
+		/*MATRIZ DE CUSTO DE DEVOLUCAO*/			
+		int matriz_custo_devolucao[a_sz][a_sz][a_sz];
+
+
+
+		
+		/* LER ARQUIVO */
+		fstream file;
+		fstream result;
+		string key_word, aux;
+		file.open(instancias[k]);
+
+
+		result_file << instancias[k] << endl;
+		while (file >> key_word) {
+			if (key_word == "DIMENSION") {
+				file >> aux;
+				file >> ORDEM;
+				
+				result_file << key_word << "  " << ORDEM << endl;
+			}
+
+			if (key_word == "CARS_NUMBER") {
+				file >> aux;
+				file >> CARS;
+
+				result_file << key_word << "  " << CARS << endl;
+
+			}
+
+			if (key_word == "EDGE_WEIGHT_SECTION") {
+				for (int i = 0; i < CARS; i++) {
+					file >> aux;
+					//cout << aux << endl;
+					for (int j = 0; j < ORDEM; j++) {
+						for (int k = 0; k < ORDEM; k++) {
+							file >> matriz[i][j][k];
+						}
+					}
+				}
+			}
+
+			if (key_word == "RETURN_RATE_SECTION") {
+				for (int i = 0; i < CARS; i++) {
+					file >> aux;
+					//cout << aux << endl;
+					for (int j = 0; j < ORDEM; j++) {
+						for (int k = 0; k < ORDEM; k++) {
+							file >> matriz_custo_devolucao[i][j][k];
+						}	
+					}
+				}
+			}
+		}	
+
+
+		file.close();
+
+
+		//preencher_matriz(matriz,matriz_custo_devolucao);
+		
+		// Vértice inicial.	
+		
+		int s = ORIGEM;
+
+		std::vector<int> caminho;
+		std::vector<int> carros_usados;
+
+		auto start = std::chrono::system_clock::now();
+		alg(matriz, s, caminho, carros_usados, matriz_custo_devolucao);
+		auto end = std::chrono::system_clock::now();
+
+		std::chrono::duration<double> diff = end-start;
+
+		diff.count();
+
+		result_file << diff.count() << endl;
+
+		result_file << endl;
+		result_file << endl;
+
+		/*
+		std::cout << "Custo do menor caminho: " << alg(matriz, s, caminho, carros_usados, matriz_custo_devolucao) << endl;
+		std::cout << "Caminho de menor custo: ";
+		for (unsigned i = 0; i < caminho.size(); i++){
+			std::cout << caminho[i]+1;
+			if(i+1 != caminho.size())
+				std::cout << " -> ";
+		}
+		std::cout << endl;
+		std::cout << "Carros usados: ";
+		for (unsigned i = 0; i < carros_usados.size(); i++){
+			std::cout << carros_usados[i];
+			if(i+1 != carros_usados.size())
+				std::cout << " -> ";
+		}
+		*/
 	}
-	std::cout << endl;
-	std::cout << "Carros usados: ";
-	for (unsigned i = 0; i < carros_usados.size(); i++){
-		std::cout << carros_usados[i];
-		if(i+1 != carros_usados.size())
-			std::cout << " -> ";
-	}
-	
-	cout << endl;
-	
+	//cout << endl;
 	return 0;
 }
